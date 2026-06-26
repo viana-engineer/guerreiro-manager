@@ -1,6 +1,9 @@
 package br.com.guerreiro_dev.backend.service;
 
 import br.com.guerreiro_dev.backend.domain.Veiculo;
+import br.com.guerreiro_dev.backend.dto.veiculo.VeiculoCreateDTO;
+import br.com.guerreiro_dev.backend.dto.veiculo.VeiculoResponseDTO;
+import br.com.guerreiro_dev.backend.mapper.VeiculoMapper;
 import br.com.guerreiro_dev.backend.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,24 +15,33 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VeiculoService {
 
-    private final VeiculoRepository veiculoRepository;
+    private final VeiculoRepository repository;
+    private final VeiculoMapper mapper;
 
-    public List<Veiculo> findAll(){
-        return veiculoRepository.findAll();
+    public List<VeiculoResponseDTO> findAll() {
+        return repository.findAll()
+                .stream()
+                .map(mapper::toResponseDTO)
+                .toList();
     }
 
-    public Veiculo findById(UUID id){
-        return veiculoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Veiculo não encontrado com o ID: " + id));
+    public VeiculoResponseDTO findById(UUID id) {
+        return mapper.toResponseDTO(findEntityById(id));
     }
 
-    public Veiculo insert(Veiculo veiculo){
-        return veiculoRepository.save(veiculo);
+    public VeiculoResponseDTO insert(VeiculoCreateDTO dto) {
+        Veiculo veiculo = mapper.toEntity(dto);
+        veiculo = repository.save(veiculo);
+        return mapper.toResponseDTO(veiculo);
     }
 
-    public void delete(UUID id){
-        Veiculo veiculo = findById(id);
-        veiculoRepository.delete(veiculo);
+    public void delete(UUID id) {
+        repository.delete(findEntityById(id));
     }
 
+    private Veiculo findEntityById(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Veículo não encontrado com o id: " + id));
+    }
 }
