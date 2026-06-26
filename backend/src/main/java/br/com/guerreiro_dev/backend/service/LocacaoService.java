@@ -1,7 +1,14 @@
 package br.com.guerreiro_dev.backend.service;
 
+import br.com.guerreiro_dev.backend.domain.Cliente;
 import br.com.guerreiro_dev.backend.domain.Locacao;
+import br.com.guerreiro_dev.backend.domain.Veiculo;
+import br.com.guerreiro_dev.backend.dto.locacao.LocacaoCreateDTO;
+import br.com.guerreiro_dev.backend.dto.locacao.LocacaoResponseDTO;
+import br.com.guerreiro_dev.backend.mapper.LocacaoMapper;
+import br.com.guerreiro_dev.backend.repository.ClienteRepository;
 import br.com.guerreiro_dev.backend.repository.LocacaoRepository;
+import br.com.guerreiro_dev.backend.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,24 +19,50 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class LocacaoService {
 
-    private final LocacaoRepository locacaoRepository;
+    private final LocacaoRepository repository;
+    private final ClienteRepository clienteRepository;
+    private final VeiculoRepository veiculoRepository;
+    private final LocacaoMapper mapper;
 
-    public List<Locacao> findAll(){
-        return locacaoRepository.findAll();
+    public List<LocacaoResponseDTO> findAll(){
+        return repository.findAll()
+                .stream()
+                .map(mapper::toResponseDTO)
+                .toList();
     }
 
-    public Locacao findById(UUID id){
-        return locacaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Locação não encontrada com o id" + id));
+    public LocacaoResponseDTO findById(UUID id){
+        return mapper.toResponseDTO(findEntityById(id));
     }
 
-    public Locacao insert(Locacao locacao){
+    public LocacaoResponseDTO insert(LocacaoCreateDTO dto){
+        Cliente cliente = clienteRepository.findById(dto.clienteId())
+                .orElseThrow();
+
+        Veiculo veiculo = veiculoRepository.findById(dto.veiculoId())
+                .orElseThrow();
+
+        Locacao locacao = mapper.toEntity(dto,cliente,veiculo);
+
         locacao.calcularValorTotal();
-        return locacaoRepository.save(locacao);
+
+        locacao =repository.save(locacao);
+
+        return mapper.toResponseDTO(locacao);
+
     }
 
     public void delete(UUID id){
-        Locacao locacao = findById(id);
-        locacaoRepository.delete(locacao);
+        repository.delete(findEntityById(id));
     }
+
+
+
+    private Locacao findEntityById(UUID id){
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Locação não encontrado com o id: " + id));
+
+    }
+
 }

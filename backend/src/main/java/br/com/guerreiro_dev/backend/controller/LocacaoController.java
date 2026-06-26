@@ -1,7 +1,7 @@
 package br.com.guerreiro_dev.backend.controller;
 
-
-import br.com.guerreiro_dev.backend.domain.Locacao;
+import br.com.guerreiro_dev.backend.dto.locacao.LocacaoCreateDTO;
+import br.com.guerreiro_dev.backend.dto.locacao.LocacaoResponseDTO;
 import br.com.guerreiro_dev.backend.service.LocacaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,29 +17,29 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class LocacaoController {
 
-    private final LocacaoService locacaoService;
+    private final LocacaoService service;
 
     @GetMapping
-    public ResponseEntity<List<Locacao>> findAll(){
-        List<Locacao> locacoes = locacaoService.findAll();
+    public ResponseEntity<List<LocacaoResponseDTO>> findAll() {
+        List<LocacaoResponseDTO> locacoes = service.findAll();
         return ResponseEntity.ok().body(locacoes);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Locacao> findById(@PathVariable UUID id){
-        Locacao locacao = locacaoService.findById(id);
-        return ResponseEntity.ok().body(locacao);
+    public ResponseEntity<LocacaoResponseDTO> findById(@PathVariable UUID id) {
+        LocacaoResponseDTO dto = service.findById(id);
+        return ResponseEntity.ok().body(dto);
     }
 
     @PostMapping
-    public ResponseEntity<Locacao> insert(@RequestBody Locacao locacao){
-        Locacao novaLocacao = locacaoService.insert(locacao);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaLocacao);
+    public ResponseEntity<LocacaoResponseDTO> insert(@RequestBody LocacaoCreateDTO dto) {
+        LocacaoResponseDTO locacao = service.insert(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(locacao);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id){
-        locacaoService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        service.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
