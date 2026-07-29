@@ -44,7 +44,7 @@ public class ClienteService {
     private Cliente findEntityById(UUID id){
         return repository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Cliente não encontrado com o id" + id));
+                        new RuntimeException("Cliente não encontrado com o id: " + id));
 
     }
 

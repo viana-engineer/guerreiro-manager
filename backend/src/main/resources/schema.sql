@@ -1,0 +1,3 @@
+CREATE SEQUENCE IF NOT EXISTS nota_fiscal_numero_seq
+    START WITH 1
+    INCREMENT BY 1;

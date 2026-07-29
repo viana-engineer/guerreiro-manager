@@ -24,7 +24,7 @@ public class NotaFiscalEmitida implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private Long numeroNota;
+    private String numeroNota;
     private LocalDate dataEmissao;
 
     @ManyToOne

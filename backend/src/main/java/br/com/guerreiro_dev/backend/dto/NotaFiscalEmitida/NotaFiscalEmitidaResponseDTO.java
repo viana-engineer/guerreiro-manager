@@ -8,7 +8,7 @@ import java.util.UUID;
 public record NotaFiscalEmitidaResponseDTO(
 
         UUID id,
-        Long numeroNota,
+        String numeroNota,
         LocalDate dataEmissao,
         LocacaoResponseDTO locacao
 

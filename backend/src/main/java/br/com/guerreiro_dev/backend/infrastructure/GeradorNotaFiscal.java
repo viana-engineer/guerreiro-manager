@@ -85,17 +85,17 @@ public class GeradorNotaFiscal {
         escrever(
                 contentStream,
                 CoordenadasNotaFiscal.NUMERO_NOTA_TOPO,
-                nota.getDataEmissao().toString()
+                nota.getNumeroNota()
         );
         escrever(
                 contentStream,
                 CoordenadasNotaFiscal.NUMERO_NOTA_MEIO,
-                nota.getDataEmissao().toString()
+                nota.getNumeroNota()
         );
         escrever(
                 contentStream,
                 CoordenadasNotaFiscal.NUMERO_NOTA_RODAPE,
-                nota.getDataEmissao().toString()
+                nota.getNumeroNota()
         );
         escrever(
                 contentStream,
