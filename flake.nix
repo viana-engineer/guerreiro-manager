@@ -55,15 +55,129 @@
         api-start = pkgs.writeShellScriptBin "api-start" ''
           set -eu
 
+          run_dir="$GUERREIRO_ROOT/.direnv/run"
+          pid_file="$run_dir/api.pid"
+
+          mkdir -p "$run_dir"
+
+          if [ -f "$pid_file" ] && kill -0 -- "-$(cat "$pid_file")" 2>/dev/null; then
+            echo "A API já está em execução (PID $(cat "$pid_file"))."
+            exit 1
+          fi
+
+          rm -f "$pid_file"
           cd "$GUERREIRO_ROOT/backend"
-          exec mvn spring-boot:run
+          setsid mvn spring-boot:run &
+          service_pid=$!
+          echo "$service_pid" > "$pid_file"
+
+          cleanup() {
+            rm -f "$pid_file"
+          }
+
+          stop_service() {
+            kill -TERM -- "-$service_pid" 2>/dev/null || true
+          }
+
+          trap cleanup EXIT
+          trap 'stop_service; exit 130' INT
+          trap 'stop_service; exit 143' TERM
+
+          echo "API iniciada (PID $service_pid)."
+          wait "$service_pid"
+        '';
+
+        api-status = pkgs.writeShellScriptBin "api-status" ''
+          pid_file="$GUERREIRO_ROOT/.direnv/run/api.pid"
+
+          if [ -f "$pid_file" ] && kill -0 -- "-$(cat "$pid_file")" 2>/dev/null; then
+            echo "A API está em execução (PID $(cat "$pid_file"))."
+            exit 0
+          fi
+
+          rm -f "$pid_file"
+          echo "A API está parada."
+          exit 1
+        '';
+
+        api-stop = pkgs.writeShellScriptBin "api-stop" ''
+          set -eu
+
+          pid_file="$GUERREIRO_ROOT/.direnv/run/api.pid"
+
+          if [ ! -f "$pid_file" ] || ! kill -0 -- "-$(cat "$pid_file")" 2>/dev/null; then
+            rm -f "$pid_file"
+            echo "A API já está parada."
+            exit 0
+          fi
+
+          service_pid="$(cat "$pid_file")"
+          kill -TERM -- "-$service_pid"
+          echo "Comando de parada enviado para a API (PID $service_pid)."
         '';
 
         web-start = pkgs.writeShellScriptBin "web-start" ''
           set -eu
 
+          run_dir="$GUERREIRO_ROOT/.direnv/run"
+          pid_file="$run_dir/web.pid"
+
+          mkdir -p "$run_dir"
+
+          if [ -f "$pid_file" ] && kill -0 -- "-$(cat "$pid_file")" 2>/dev/null; then
+            echo "A aplicação web já está em execução (PID $(cat "$pid_file"))."
+            exit 1
+          fi
+
+          rm -f "$pid_file"
           cd "$GUERREIRO_ROOT/frontend"
-          exec npm run dev
+          setsid npm run dev &
+          service_pid=$!
+          echo "$service_pid" > "$pid_file"
+
+          cleanup() {
+            rm -f "$pid_file"
+          }
+
+          stop_service() {
+            kill -TERM -- "-$service_pid" 2>/dev/null || true
+          }
+
+          trap cleanup EXIT
+          trap 'stop_service; exit 130' INT
+          trap 'stop_service; exit 143' TERM
+
+          echo "Aplicação web iniciada (PID $service_pid)."
+          wait "$service_pid"
+        '';
+
+        web-status = pkgs.writeShellScriptBin "web-status" ''
+          pid_file="$GUERREIRO_ROOT/.direnv/run/web.pid"
+
+          if [ -f "$pid_file" ] && kill -0 -- "-$(cat "$pid_file")" 2>/dev/null; then
+            echo "A aplicação web está em execução (PID $(cat "$pid_file"))."
+            exit 0
+          fi
+
+          rm -f "$pid_file"
+          echo "A aplicação web está parada."
+          exit 1
+        '';
+
+        web-stop = pkgs.writeShellScriptBin "web-stop" ''
+          set -eu
+
+          pid_file="$GUERREIRO_ROOT/.direnv/run/web.pid"
+
+          if [ ! -f "$pid_file" ] || ! kill -0 -- "-$(cat "$pid_file")" 2>/dev/null; then
+            rm -f "$pid_file"
+            echo "A aplicação web já está parada."
+            exit 0
+          fi
+
+          service_pid="$(cat "$pid_file")"
+          kill -TERM -- "-$service_pid"
+          echo "Comando de parada enviado para a aplicação web (PID $service_pid)."
         '';
 
         guerreiro-help = pkgs.writeShellScriptBin "guerreiro-help" ''
@@ -72,7 +186,11 @@
           echo "  pg-status     Verifica o estado do PostgreSQL"
           echo "  pg-stop       Encerra o PostgreSQL"
           echo "  api-start     Inicia a API Spring Boot com Maven"
+          echo "  api-status    Verifica o estado da API"
+          echo "  api-stop      Encerra a API"
           echo "  web-start     Inicia a aplicação web Next.js"
+          echo "  web-status    Verifica o estado da aplicação web"
+          echo "  web-stop      Encerra a aplicação web"
         '';
       in {
         devShells.default = pkgs.mkShell {
@@ -83,12 +201,17 @@
             pkgs.jdk21
             pkgs.maven
             pkgs.postgresql
+            pkgs.util-linux
 
             pg-start
             pg-stop
             pg-status
             api-start
+            api-status
+            api-stop
             web-start
+            web-status
+            web-stop
             guerreiro-help
           ];
 
